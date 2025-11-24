@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>SciCon Shooter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@400;600&display=swap');
+      
+      body {
+        margin: 0;
+        overflow: hidden;
+        background-color: #0b1020;
+        font-family: 'Inter', sans-serif;
+        touch-action: none; /* Prevent pull-to-refresh on mobile */
+      }
+      
+      h1, h2, h3, .arcade-font {
+        font-family: 'Orbitron', sans-serif;
+      }
+
+      /* Custom scrollbar for modals */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #1a2035; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #6c63ff; 
+        border-radius: 4px;
+      }
+
+      /* --- SCICON CARD SYSTEM --- */
+      /* Matches the Speakers Image: Dark fill, Grey/Silver Border, Cut corners, Nodes */
+
+      .scicon-card {
+        position: relative;
+        background: #000000;
+        /* The Card Shape: Octagon-ish (Chamfered Rect) */
+        clip-path: polygon(
+          20px 0, calc(100% - 20px) 0, 
+          100% 20px, 100% calc(100% - 20px), 
+          calc(100% - 20px) 100%, 20px 100%, 
+          0 calc(100% - 20px), 0 20px
+        );
+        /* Inner padding handled by content divs usually */
+      }
+
+      /* The Border & Glow Container */
+      .scicon-border-container {
+        position: absolute;
+        inset: -2px; /* Slightly larger than content */
+        background: linear-gradient(135deg, #4b5563 0%, #9ca3af 50%, #4b5563 100%); /* Metallic Grey Gradient */
+        z-index: -1;
+        clip-path: polygon(
+          20px 0, calc(100% - 20px) 0, 
+          100% 20px, 100% calc(100% - 20px), 
+          calc(100% - 20px) 100%, 20px 100%, 
+          0 calc(100% - 20px), 0 20px
+        );
+      }
+      
+      .scicon-inner-bg {
+         position: absolute;
+         inset: 2px; /* Inner fill */
+         background: rgba(5, 5, 10, 0.95);
+         clip-path: polygon(
+          19px 0, calc(100% - 19px) 0, 
+          100% 19px, 100% calc(100% - 19px), 
+          calc(100% - 19px) 100%, 19px 100%, 
+          0 calc(100% - 19px), 0 19px
+        );
+      }
+
+      /* The Circuit Nodes (Circles at corners) */
+      .scicon-node {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        background: #9ca3af; /* Grey metal */
+        border-radius: 50%;
+        z-index: 10;
+        box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+      }
+
+      /* Node Positions based on the 20px chamfer */
+      .node-tl-1 { top: -4px; left: 16px; }
+      .node-tl-2 { top: 16px; left: -4px; }
+      
+      .node-tr-1 { top: -4px; right: 16px; }
+      .node-tr-2 { top: 16px; right: -4px; }
+      
+      .node-bl-1 { bottom: -4px; left: 16px; }
+      .node-bl-2 { bottom: 16px; left: -4px; }
+      
+      .node-br-1 { bottom: -4px; right: 16px; }
+      .node-br-2 { bottom: 16px; right: -4px; }
+
+      /* Buttons */
+      .scicon-btn {
+        position: relative;
+        background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+        color: white;
+        border: none;
+        clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+        transition: all 0.2s ease;
+        text-transform: uppercase;
+        font-family: 'Orbitron', sans-serif;
+        letter-spacing: 0.1em;
+      }
+      .scicon-btn:hover {
+        filter: brightness(1.2);
+        transform: translateY(-1px);
+        box-shadow: 0 0 15px rgba(124, 58, 237, 0.5);
+      }
+      .scicon-btn:active {
+        transform: scale(0.98);
+      }
+      .scicon-btn-secondary {
+        background: transparent;
+        border: 1px solid #4b5563;
+      }
+      .scicon-btn-secondary:hover {
+        background: rgba(255,255,255,0.05);
+      }
+
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
