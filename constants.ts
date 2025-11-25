@@ -31,6 +31,12 @@ export const ASSETS = {
   REFERRAL_LINK: "https://researchhub.com/referral/join?refr=db8c0146-a571-4a57-b576-78f75066298c"
 };
 
+// Pantry Cloud Configuration
+export const PANTRY_CONFIG = {
+  ID: "627252f3-a6e9-434c-b02d-70bf8822a0e8",
+  BASKET_NAME: "leaderboard"
+};
+
 export const COLORS = {
   bg: '#0b1020',
   accent: '#6c63ff',
@@ -43,7 +49,7 @@ export const COLORS = {
 
 export const GAME_CONFIG = {
   FPS: 60,
-  BASE_PLAYER_SPEED: 5,
+  BASE_PLAYER_SPEED: 3.5, // Reduced start speed so upgrades feel impactful
   PLAYER_LIVES: 3,
   MAX_LIVES: 5,
   BASE_SPAWN_RATE: 80, // Faster spawns
@@ -71,14 +77,14 @@ export const TEXT_STRINGS = {
 
 // Lowered scores significantly to allow new players to enter high scores
 export const DEFAULT_LEADERBOARD = [
-  { name: "Brian", score: 1000 },
-  { name: "Patrick", score: 900 },
-  { name: "Jeffrey", score: 800 },
-  { name: "Kobold", score: 700 },
-  { name: "Anton", score: 600 },
-  { name: "Naman", score: 500 },
-  { name: "Ed", score: 400 },
-  { name: "Caleb", score: 300 },
-  { name: "Sana", score: 200 },
-  { name: "Guest", score: 100 }
+  { name: "Brian", score: 50 },
+  { name: "Patrick", score: 45 },
+  { name: "Jeffrey", score: 40 },
+  { name: "Kobold", score: 35 },
+  { name: "Anton", score: 30 },
+  { name: "Naman", score: 25 },
+  { name: "Ed", score: 20 },
+  { name: "Caleb", score: 15 },
+  { name: "Sana", score: 10 },
+  { name: "Guest", score: 5 }
 ];

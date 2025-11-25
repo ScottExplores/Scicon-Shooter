@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect } from 'react';
 import GameCanvas from './components/GameCanvas';
 import StartScreen from './components/StartScreen';
@@ -8,7 +7,8 @@ import UpgradeShop from './components/UpgradeShop';
 import Tutorial from './components/Tutorial';
 import { GameState, Stats, Upgrades, LeaderboardEntry } from './types';
 import { audioService } from './services/audioService';
-import { UPGRADE_BASE_COSTS, ASSETS, DEFAULT_LEADERBOARD } from './constants';
+import { UPGRADE_BASE_COSTS, ASSETS } from './constants';
+import { LeaderboardService } from './services/leaderboardService';
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>(GameState.MENU);
@@ -16,20 +16,22 @@ const App: React.FC = () => {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [playerNameInput, setPlayerNameInput] = useState<string>('');
   const [showNameInput, setShowNameInput] = useState<boolean>(false);
+  const [loadingLeaderboard, setLoadingLeaderboard] = useState<boolean>(false);
 
-  // Initialize Leaderboard
+  // Initialize Leaderboard (Global)
   useEffect(() => {
-    const saved = localStorage.getItem('rh_leaderboard');
-    if (saved) {
-        setLeaderboard(JSON.parse(saved));
-    } else {
-        setLeaderboard(DEFAULT_LEADERBOARD);
-    }
-  }, []);
+    const fetchScores = async () => {
+        setLoadingLeaderboard(true);
+        const scores = await LeaderboardService.getLeaderboard();
+        setLeaderboard(scores);
+        setLoadingLeaderboard(false);
+    };
+    fetchScores();
+  }, [gameState]); // Refresh when changing state (e.g. returning to menu)
 
   const [stats, setStats] = useState<Stats>({
     score: 0,
-    highScore: parseInt(localStorage.getItem('rh_highscore') || '0'),
+    highScore: parseInt(localStorage.getItem('rh_highscore') || '0'), // Keep personal highscore local
     wave: 1,
     coins: 0,
     totalCoins: 0,
@@ -48,8 +50,6 @@ const App: React.FC = () => {
 
   const startGame = () => {
     audioService.init();
-    // Reset stats but keep upgrades for this session if desired? 
-    // We'll reset everything for a fresh "run"
     setStats(prev => ({ 
         ...prev, 
         score: 0, 
@@ -57,7 +57,7 @@ const App: React.FC = () => {
         coins: 0, 
         totalCoins: 0,
         enemiesDefeated: 0,
-        lives: 3, // Initial lives
+        lives: 3, 
         upgrades: { fireRate: 0, speed: 0, maxHp: 0 },
         bossProgress: 0,
         isBossActive: false,
@@ -66,7 +66,7 @@ const App: React.FC = () => {
     }));
     setShowNameInput(false);
     setPlayerNameInput('');
-    setGameId(prev => prev + 1); // Force fresh canvas instance
+    setGameId(prev => prev + 1); 
     setGameState(GameState.TUTORIAL);
   };
 
@@ -91,8 +91,6 @@ const App: React.FC = () => {
        return;
     }
 
-    // Dynamic Cost Logic: Base + (Level * 5)
-    // Much flatter curve as requested
     const currentLevel = stats.upgrades[type];
     const cost = UPGRADE_BASE_COSTS[type] + (currentLevel * 5);
 
@@ -109,7 +107,6 @@ const App: React.FC = () => {
     }
   };
 
-  // Keyboard shortcut for Shop 'V'
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'v' || e.key === 'V') {
@@ -124,7 +121,7 @@ const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [gameState]);
 
-  // Game Over Logic - Check High Score
+  // Game Over Logic - Check Global Leaderboard
   useEffect(() => {
     if (gameState === GameState.GAMEOVER) {
       if (stats.score > stats.highScore) {
@@ -132,32 +129,33 @@ const App: React.FC = () => {
         setStats(s => ({...s, highScore: s.score}));
       }
       
-      // Check for Leaderboard qualification (Strict sorting and >= check)
       const sorted = [...leaderboard].sort((a, b) => b.score - a.score);
-      const lowestScore = sorted.length < 10 ? 0 : sorted[9].score;
+      // Logic: If leaderboard has < 10 entries OR score >= 10th place
+      const lowestScore = sorted.length < 10 ? 0 : sorted[Math.min(sorted.length - 1, 9)].score;
       
-      // Allow entry if score > 0 AND (list isn't full OR score beats/ties lowest)
       if (stats.score > 0 && (sorted.length < 10 || stats.score >= lowestScore)) {
           setShowNameInput(true);
       }
     }
   }, [gameState, stats.score, leaderboard]);
 
-  const submitScore = () => {
+  const submitScore = async () => {
       if (!playerNameInput.trim()) return;
       
       const newEntry: LeaderboardEntry = { name: playerNameInput.trim().substring(0, 10).toUpperCase(), score: stats.score };
-      const newLeaderboard = [...leaderboard, newEntry]
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 10);
       
-      setLeaderboard(newLeaderboard);
-      localStorage.setItem('rh_leaderboard', JSON.stringify(newLeaderboard));
+      // Optimistic update locally
+      const optimisticList = [...leaderboard, newEntry].sort((a,b) => b.score - a.score).slice(0, 10);
+      setLeaderboard(optimisticList);
+      
       setShowNameInput(false);
+      
+      // Sync with cloud
+      await LeaderboardService.submitScore(newEntry);
+      
       setGameState(GameState.MENU);
   };
 
-  // Determine Publication Status based on score
   const getPubStatus = (score: number) => {
     if (score < 500) return { title: "DESK REJECTED", color: "text-red-500", desc: "Try adding more novelty." };
     if (score < 1500) return { title: "UNDER REVIEW", color: "text-yellow-400", desc: "Reviewer #2 has some notes." };
@@ -170,8 +168,6 @@ const App: React.FC = () => {
   return (
     <div className="relative w-full h-full bg-[#0b1020] select-none">
       
-      {/* Game Layer */}
-      {/* Note: GameCanvas is rendered during PAUSED/SHOP/TUTORIAL so visual context remains */}
       {(gameState === GameState.PLAYING || gameState === GameState.PAUSED || gameState === GameState.GAMEOVER || gameState === GameState.SHOP || gameState === GameState.TUTORIAL) && (
         <GameCanvas 
            key={gameId}
@@ -182,17 +178,14 @@ const App: React.FC = () => {
         />
       )}
 
-      {/* Tutorial Overlay */}
       {gameState === GameState.TUTORIAL && (
          <Tutorial onReady={handleTutorialComplete} />
       )}
 
-      {/* UI Overlay (HUD) */}
       {(gameState === GameState.PLAYING) && (
         <UIOverlay stats={stats} setGameState={setGameState} lives={stats.lives} />
       )}
 
-      {/* Menus */}
       {gameState === GameState.MENU && (
         <StartScreen onStart={startGame} onAbout={() => setGameState(GameState.ABOUT)} leaderboard={leaderboard} />
       )}
@@ -202,7 +195,6 @@ const App: React.FC = () => {
           <div className="relative w-full max-w-sm p-1">
              <div className="scicon-border-container"></div>
              <div className="scicon-inner-bg"></div>
-             {/* Nodes */}
              <div className="scicon-node node-tl-1"></div>
              <div className="scicon-node node-tr-1"></div>
              <div className="scicon-node node-bl-1"></div>
@@ -242,7 +234,6 @@ const App: React.FC = () => {
           <div className="relative w-full max-w-md animate-bounce-in p-1 max-h-[95vh] flex flex-col">
              <div className="scicon-border-container"></div>
              <div className="scicon-inner-bg"></div>
-             {/* Nodes */}
              <div className="scicon-node node-tl-1"></div>
              <div className="scicon-node node-tr-1"></div>
              <div className="scicon-node node-bl-1"></div>
@@ -271,16 +262,6 @@ const App: React.FC = () => {
                           >
                             SUBMIT RECORD
                           </button>
-
-                          {/* Also Show Referral Here so winners don't miss it */}
-                          <div className="mt-4 pt-4 border-t border-white/10">
-                               <button 
-                                  onClick={() => window.open(ASSETS.REFERRAL_LINK, '_blank')}
-                                  className="text-[10px] text-indigo-400 hover:text-white uppercase tracking-widest animate-pulse"
-                              >
-                                  JOIN RESEARCHHUB (REFERRAL LINK)
-                              </button>
-                          </div>
                     </div>
                 ) : (
                     <>
@@ -304,7 +285,7 @@ const App: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* REFERRAL PROMO SECTION */}
+                        {/* REFERRAL PROMO SECTION (Simple button only) */}
                         <div className="bg-indigo-900/30 p-2 border border-indigo-500/50 rounded flex flex-col items-center">
                             <p className="text-white text-xs font-bold uppercase tracking-wider mb-2">Want to fund real science?</p>
                             <button 
@@ -341,7 +322,6 @@ const App: React.FC = () => {
           <div className="relative w-full max-w-md max-h-[85vh] p-1">
             <div className="scicon-border-container"></div>
             <div className="scicon-inner-bg"></div>
-            {/* Nodes */}
              <div className="scicon-node node-tl-1"></div>
              <div className="scicon-node node-tr-1"></div>
              <div className="scicon-node node-bl-1"></div>

@@ -1,6 +1,7 @@
 
 
 import React from 'react';
+import { ASSETS } from '../constants';
 
 interface TutorialProps {
   onReady: () => void;
@@ -24,8 +25,8 @@ const Tutorial: React.FC<TutorialProps> = ({ onReady }) => {
           </div>
 
           <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 rounded-full border border-yellow-500 flex items-center justify-center bg-yellow-900/30">
-              <span className="text-xs font-bold text-yellow-400">RSC</span>
+            <div className="w-12 h-12 rounded-full border border-yellow-500 flex items-center justify-center bg-yellow-900/30 overflow-hidden">
+              <img src={ASSETS.RSC_TOKEN} alt="RSC" className="w-full h-full object-cover" />
             </div>
             <div>
               <h3 className="font-bold text-lg text-yellow-400">COLLECT COINS</h3>
@@ -36,8 +37,8 @@ const Tutorial: React.FC<TutorialProps> = ({ onReady }) => {
 
         <div className="space-y-6">
            <div className="flex items-center space-x-4">
-            <div className="w-12 h-12 rounded-full border border-purple-500 flex items-center justify-center bg-purple-900/30">
-              <span className="text-xl">🧑‍🔬</span>
+            <div className="w-12 h-12 rounded-full border border-purple-500 flex items-center justify-center bg-purple-900/30 overflow-hidden">
+               <img src={ASSETS.FOUNDER_BRIAN} alt="Founder" className="w-full h-full object-cover" />
             </div>
             <div>
               <h3 className="font-bold text-lg text-purple-400">FIND FOUNDERS</h3>
@@ -47,11 +48,11 @@ const Tutorial: React.FC<TutorialProps> = ({ onReady }) => {
           
            <div className="flex items-center space-x-4">
             <div className="w-12 h-12 rounded-lg border border-red-500 flex items-center justify-center bg-red-900/30">
-              <span className="text-xl">👹</span>
+              <span className="text-2xl">🔒</span>
             </div>
             <div>
               <h3 className="font-bold text-lg text-red-400">AVOID BARRIERS</h3>
-              <p className="text-gray-400 text-sm">Don't hit Journals, Paywalls, or Comments.</p>
+              <p className="text-gray-400 text-sm">Don't hit Journals, Paywalls, or Locks.</p>
             </div>
           </div>
         </div>
